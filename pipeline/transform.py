@@ -30,18 +30,18 @@ log = logging.getLogger(__name__)
 
 
 RENAME = {
-    "squareMeters" : "area_m2",
+    "squareMeters": "area_m2",
     "floorCount": "floor_count",
     "buildYear": "build_year",
     "centreDistance": "centre_distance_km",
     "poiCount": "poi_count",
     "buildingMaterial": "building_material",
-    "hasParkingSpace":"has_parking",
-    "hasBalcony":"hac_balcony",
-    "hasElevator":"has_elevator",
+    "hasParkingSpace": "has_parking",
+    "hasBalcony": "has_balcony",
+    "hasElevator": "has_elevator",
     "hasSecurity": "has_security",
-    "hasStorageRoom":"has_storage",
-    "type":"building_type",
+    "hasStorageRoom": "has_storage",
+    "type": "building_type",
 }
 
 FLAG_COLUMNS = ["has_parking", "has_balcony", "has_elevator", "has_security", "has_storage"]
