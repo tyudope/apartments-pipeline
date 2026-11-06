@@ -175,7 +175,8 @@ def transform(month: str) -> dict:
         "reject_reasons": rejects["reject_reason"].value_counts().to_dict(),
         "null_pct": {k: round(float(v), 1) for k,v in (listings.isna().mean() * 100).items() if v > 0},
     }
-    log.info("transform %s: in=%d out=%d rejected=%d %s", month, stats["rows_in"], stats["rows_out"], stats["rejected"], stats["reject_reasons"])
+    log.info("transform %s: in=%d out=%d rejected=%d %s", month,
+             stats["rows_in"], stats["rows_out"], stats["rejected"], stats["reject_reasons"])
     return stats
 
 
