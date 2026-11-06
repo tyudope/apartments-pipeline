@@ -37,6 +37,7 @@ RENAME = {
     "poiCount": "poi_count",
     "buildingMaterial": "building_material",
     "hasParkingSpace":"has_parking",
+    "hasBalcony":"hac_balcony",
     "hasElevator":"has_elevator",
     "hasSecurity": "has_security",
     "hasStorageRoom":"has_storage",
@@ -105,7 +106,7 @@ def normalize(df: pd.DataFrame, month_key: str) -> pd.DataFrame:
 
 
     df["price"] = df["price"].astype("int64")
-    df["price_per_m2"] = (df["price"] / df["arena_m2"]).round(2)
+    df["price_per_m2"] = (df["price"] / df["area_m2"]).round(2)
 
     return df
 
