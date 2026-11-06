@@ -8,6 +8,18 @@ A small, production-shaped data pipeline. Every month it takes the newest file o
 
 Stack: Python 3.11, Pandas, Parquet, PostgreSQL 16 (Docker), FastAPI, pytest, ruff, GitHub Actions.
 
+
+
+## In six pictures
+
+![1 — the data](docs/slide-1.png)
+![2 — what I built](docs/slide-2.png)
+![3 — cleaning, before and after](docs/slide-3.png)
+![4 — bad rows are rejected with a reason](docs/slide-4.png)
+![5 — star schema, loaded safely](docs/slide-5.png)
+![6 — checks, then serve](docs/slide-6.png)
+
+
 ## Architecture
 
 ```
