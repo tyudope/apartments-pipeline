@@ -1,0 +1,11 @@
+id,city,type,squareMeters,rooms,floor,floorCount,buildYear,latitude,longitude,centreDistance,poiCount,schoolDistance,clinicDistance,postOfficeDistance,kindergartenDistance,restaurantDistance,collegeDistance,pharmacyDistance,ownership,buildingMaterial,condition,hasParkingSpace,hasBalcony,hasElevator,hasSecurity,hasStorageRoom,price
+78c79140abe14c5868d2c1b1e420ecaf,krakow,blockOfFlats,46.0,2.0,,6.0,2017.0,50.0108036067055,19.889806322205,6.05,6.0,0.355,0.896,0.902,0.157,0.414,4.205,0.246,condominium,,,no,yes,yes,no,yes,695000
+9acc41ae517183347f0ee3099463ca1e,krakow,apartmentBuilding,42.0,2.0,2.0,3.0,2017.0,50.013080870931,19.9057461620357,5.24,5.0,0.501,0.35,0.601,0.22,0.536,3.548,0.586,condominium,brick,,no,yes,yes,yes,no,600000
+b50988e796828441e14c2f64f611ec08,krakow,tenement,69.0,3.0,,2.0,,50.0502786140221,19.9290725310751,0.87,22.0,0.153,0.779,0.188,0.365,0.175,0.736,0.219,condominium,brick,,no,yes,no,yes,no,989000
+9a0ff6a57d195d235a1e048a20865e1e,krakow,blockOfFlats,73.0,3.0,3.0,4.0,,50.006,20.0086,7.43,9.0,0.209,0.465,0.519,0.24,0.269,3.491,0.223,condominium,,,no,yes,no,no,yes,599000
+dirty_tiny_area,krakow,blockOfFlats,9.0,2.0,,6.0,2017.0,50.0108036067055,19.889806322205,6.05,6.0,0.355,0.896,0.902,0.157,0.414,4.205,0.246,condominium,,,no,yes,yes,no,yes,695000
+dirty_price_low,krakow,blockOfFlats,46.0,2.0,,6.0,2017.0,50.0108036067055,19.889806322205,6.05,6.0,0.355,0.896,0.902,0.157,0.414,4.205,0.246,condominium,,,no,yes,yes,no,yes,50000
+dirty_rooms,krakow,blockOfFlats,30.0,5.0,,6.0,2017.0,50.0108036067055,19.889806322205,6.05,6.0,0.355,0.896,0.902,0.157,0.414,4.205,0.246,condominium,,,no,yes,yes,no,yes,695000
+dirty_floor,krakow,blockOfFlats,46.0,2.0,12.0,4.0,2017.0,50.0108036067055,19.889806322205,6.05,6.0,0.355,0.896,0.902,0.157,0.414,4.205,0.246,condominium,,,no,yes,yes,no,yes,695000
+dirty_coords,krakow,blockOfFlats,46.0,2.0,,6.0,2017.0,10.0,19.889806322205,6.05,6.0,0.355,0.896,0.902,0.157,0.414,4.205,0.246,condominium,,,no,yes,yes,no,yes,695000
+flags_case,krakow,blockOfFlats,46.0,2.0,,6.0,2017.0,50.0108036067055,19.889806322205,6.05,6.0,0.355,0.896,0.902,0.157,0.414,4.205,0.246,condominium,,,no,No, YES ,no,yes,695000

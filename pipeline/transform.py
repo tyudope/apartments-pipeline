@@ -21,7 +21,6 @@ import argparse
 import logging
 from pathlib import Path
 
-
 import pandas as pd
 
 from pipeline import config
