@@ -24,3 +24,26 @@ DATABASE_URL = os.getenv(
     "DATABASE_URL",
     "postgresql://apartments:apartments@localhost:5433/apartments",
 )
+
+
+# Expected column set of a raw file. If the publisher adds or renames a column,
+# transform fails loudly instead of silently producing a different table.
+RAW_COLUMNS = [
+    "id", "city", "type", "squareMeters", "rooms", "floor", "floorCount",
+    "buildYear", "latitude", "longitude", "centreDistance", "poiCount",
+    "schoolDistance", "clinicDistance", "postOfficeDistance",
+    "kindergartenDistance", "restaurantDistance", "collegeDistance",
+    "pharmacyDistance", "ownership", "buildingMaterial", "condition",
+    "hasParkingSpace", "hasBalcony", "hasElevator", "hasSecurity",
+    "hasStorageRoom", "price",
+]
+
+# Plausibility bounds. The publisher pre-filters some of these; we enforce
+# them anyway because the pipeline must not depend on upstream behaviour.
+MIN_AREA_M2, MAX_AREA_M2 = 15.0, 250.0
+MIN_PRICE_PLN, MAX_PRICE_PLN = 100_000, 10_000_000
+MIN_PPM2, MAX_PPM2 = 2_000, 40_000          # price per m2
+MIN_M2_PER_ROOM = 10.0                      # 4 rooms in 35 m2 is not a flat
+MIN_BUILD_YEAR = 1850
+POLAND_LAT = (49.0, 55.0)
+POLAND_LON = (14.0, 24.2)
