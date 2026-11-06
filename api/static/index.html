@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Apartment Prices in Poland</title>
+<style>
+  :root { --accent: #2a78d6; --ink: #1a1a19; --ink-2: #5b5a54; --muted: #8a8980; --line: #e2e1dc; --bg: #f7f7f5; --card: #fff;
+          --ok: #008300; --bad: #d12f2f; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 "IBM Plex Sans", -apple-system, "Segoe UI", system-ui, sans-serif;
+         font-variant-numeric: tabular-nums; }
+  header { background: var(--card); border-bottom: 1px solid var(--line); padding: 0 24px; display: flex; align-items: center; gap: 24px; height: 52px; }
+  header h1 { font-size: 15px; font-weight: 600; margin: 0; }
+  nav button { background: none; border: 0; border-bottom: 2px solid transparent; padding: 16px 4px; margin-right: 16px; font: inherit;
+               color: var(--ink-2); cursor: pointer; }
+  nav button.on { color: var(--accent); border-color: var(--accent); font-weight: 600; }
+  main { max-width: 1240px; margin: 0 auto; padding: 20px 24px 48px; }
+  .tab { display: none; } .tab.on { display: block; }
+  .row { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  label { color: var(--ink-2); } select { font: inherit; padding: 5px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--card); }
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(12, 1fr); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 16px; grid-column: span 12; min-width: 0; }
+  .c4 { grid-column: span 4; } .c6 { grid-column: span 6; }
+  @media (max-width: 900px) { .c4 { grid-column: span 6; } } @media (max-width: 600px) { .c4, .c6 { grid-column: span 12; } }
+  .card h2 { font-size: 13px; font-weight: 600; color: var(--ink-2); margin: 0 0 10px; text-transform: uppercase; letter-spacing: .04em; }
+  .kpi { font-size: 28px; font-weight: 600; line-height: 1.1; } .sub { color: var(--muted); margin-top: 6px; font-size: 13px; }
+  .pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; color: #fff; background: var(--muted); }
+  .pill.ok { background: var(--ok); } .pill.bad { background: var(--bad); }
+  .up { color: var(--ok); } .down { color: var(--bad); }
+  .chart { position: relative; height: 280px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; } th, td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: left; }
+  th { color: var(--ink-2); font-weight: 600; } td.n, th.n { text-align: right; } .scroll { overflow-x: auto; }
+  code { font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace; font-size: 12px; background: var(--bg); padding: 1px 5px; border-radius: 4px; }
+  .steps { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  .step h3 { margin: 0 0 2px; font-size: 14px; } .step ul { margin: 8px 0 0; padding-left: 18px; color: var(--ink-2); } .step li { margin: 3px 0; }
+  svg text { font-family: inherit; } .diag { overflow-x: auto; }
+  .err { color: var(--bad); } #runlog td:not(:nth-child(4)), tbody td:nth-child(2) { white-space: nowrap; }
+</style>
+</head>
+<body>
+<header><h1>Apartment Prices in Poland</h1>
+  <nav><button class="on" data-tab="dash">Dashboard</button><button data-tab="pipe">Pipeline</button></nav></header>
+<main>
+<section id="dash" class="tab on">
+  <div class="row"><label for="city">City</label><select id="city"></select><span id="err" class="err"></span></div>
+  <div class="grid">
+    <div class="card c4"><h2>Pipeline health</h2><div class="kpi"><span id="health" class="pill">…</span></div><div class="sub" id="health-sub"></div></div>
+    <div class="card c4"><h2>Months loaded</h2><div class="kpi" id="months">…</div><div class="sub" id="months-sub"></div></div>
+    <div class="card c4"><h2>Latest median price / m²</h2><div class="kpi" id="latest">…</div><div class="sub" id="latest-sub"></div></div>
+    <div class="card"><h2>Median price per m² by month</h2><div class="chart"><canvas id="c1"></canvas></div></div>
+    <div class="card c6"><h2 id="c2-title">Feature premiums (latest observation per flat)</h2><div class="chart"><canvas id="c2"></canvas></div></div>
+    <div class="card c6"><h2>Median price per m² by distance from centre</h2><div class="chart"><canvas id="c3"></canvas></div></div>
+    <div class="card"><h2>Monthly prices</h2><div class="scroll"><table><thead><tr><th>City</th><th>Month</th><th class="n">Listings</th>
+      <th class="n">Median PLN/m²</th><th class="n">MoM %</th></tr></thead><tbody id="prices"></tbody></table></div></div>
+  </div>
+</section>
+
+<section id="pipe" class="tab">
+  <div class="grid">
+    <div class="card diag"><h2>Flow</h2>
+      <svg viewBox="0 0 1350 250" width="100%" style="min-width:900px" role="img" aria-label="Pipeline flow diagram">
+        <defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+          <path d="M0 0L10 5L0 10z" fill="#5b5a54"/></marker></defs>
+        <g font-size="12" fill="#1a1a19">
+          <text x="330" y="28" text-anchor="middle" fill="#5b5a54">idempotent: skip by checksum / overwrite partition / upsert on (id, month)</text>
+          <path d="M20 36 H640" stroke="#2a78d6" stroke-width="2" stroke-dasharray="4 3"/>
+          <g id="boxes"></g>
+          <path d="M250 190 V204 H1100 V190" fill="none" stroke="#5b5a54" stroke-width="1.5"/>
+          <text x="675" y="228" text-anchor="middle" fill="#5b5a54">run.py --month YYYY-MM · runs the steps in order, logs to run_log, backfills a range · scheduled by cron</text>
+        </g>
+      </svg></div>
+    <div class="card"><h2>Steps</h2><div class="steps">
+      <div class="step"><h3>1 · Extract</h3><code>pipeline/extract.py</code><ul>
+        <li>Copies the month's source CSV to <code>data/raw/month=YYYY-MM/</code>, byte for byte.</li>
+        <li>Hashes source and raw with SHA-256; identical checksum ⇒ skip, new content ⇒ re-land.</li>
+        <li>Fails loudly if the source file for the month is missing.</li></ul></div>
+      <div class="step"><h3>2 · Transform</h3><code>pipeline/transform.py</code><ul>
+        <li>Schema guard: refuses to run if the raw columns differ from the expected 28.</li>
+        <li>Normalizes: snake_case names, yes/no → boolean, lowercased text, nullable ints; derives price_per_m2 and month_key.</li>
+        <li>Routes bad rows to a rejects set with a reason (area, price, ppm², rooms, floor, build year, coordinates); first failing rule wins.</li>
+        <li>Drops duplicate ids within the month, then overwrites the silver Parquet partitions.</li></ul></div>
+      <div class="step"><h3>3 · Load</h3><code>pipeline/load.py</code><ul>
+        <li>Ensures the schema exists, then runs the whole month in one transaction.</li>
+        <li>dim_month: insert, ON CONFLICT DO NOTHING.</li>
+        <li>fact_listing: COPY into a temp table, then upsert ON CONFLICT (id, month_key).</li>
+        <li>rejects: delete the month, insert the month; logs inserted/updated counts to run_log.</li></ul></div>
+      <div class="step"><h3>4 · Checks</h3><code>pipeline/checks.py</code><ul>
+        <li>Six rules: rows present, no null keys, unique id, no orphan cities, reject rate ≤ 10 %, volume within ±50 % of previous month.</li>
+        <li>Every check writes a PASS/FAIL row to run_log.</li>
+        <li>Any failure raises; run.py then quarantines the month by deleting it from fact_listing. Raw and silver stay for diagnosis.</li></ul></div>
+      <div class="step"><h3>5 · Serve</h3><code>api/main.py</code><ul>
+        <li>FastAPI reads Postgres with psycopg; each analytical endpoint is one SQL file in <code>sql/questions/</code>.</li>
+        <li>/health is OK only when the latest run of every check passed.</li>
+        <li>Unknown city keys return 404; database down returns 503.</li>
+        <li>Serves this page and vendored Chart.js from <code>/static</code>.</li></ul></div>
+    </div></div>
+    <div class="card c6"><h2>Data model (schema dw)</h2><div class="scroll"><table><thead><tr><th>Object</th><th>Key</th><th>What it holds</th></tr></thead><tbody>
+      <tr><td>dim_city</td><td>city_key</td><td>15 cities: display name and voivodeship.</td></tr>
+      <tr><td>dim_month</td><td>month_key</td><td>Year, month, quarter, first day.</td></tr>
+      <tr><td>fact_listing</td><td>(id, month_key)</td><td>One listing as observed in one month: area, rooms, floor, build year, location, flags, price, price_per_m2.</td></tr>
+      <tr><td>v_listing_latest</td><td>id</td><td>View: DISTINCT ON (id), last month observed. One row per flat for pricing questions.</td></tr>
+      <tr><td>rejects</td><td>—</td><td>Rows the transform refused, with reject_reason. Replaced per month.</td></tr>
+      <tr><td>run_log</td><td>run_id</td><td>One row per step and per check: month, passed, value, ran_at.</td></tr>
+    </tbody></table></div>
+      <p class="sub">Grain: one row per listing per month observed. The same flat seen in three months is three observations of the market, not a duplicate.</p></div>
+    <div class="card c6"><h2>Rejects by reason (live)</h2><div class="scroll"><table><thead><tr><th>Reason</th><th class="n">Rows</th></tr></thead><tbody id="rejects"></tbody></table></div></div>
+    <div class="card"><h2>Run log — latest result per step</h2><div class="scroll"><table><thead><tr><th>Step</th><th>Month</th><th>Result</th><th>Value</th><th>Ran at</th></tr></thead><tbody id="runlog"></tbody></table></div></div>
+  </div>
+</section>
+</main>
+<script src="/static/chart.umd.js"></script>
+<script>
+const PAL = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#4a3aa7", "#e34948"];
+const colour = i => PAL[i % PAL.length], dash = i => (i >= PAL.length ? [6, 4] : []);
+const $ = id => document.getElementById(id);
+const fmt = n => n == null ? "–" : Number(n).toLocaleString("en-US", { maximumFractionDigits: 0 });
+const pct = v => v == null ? "–" : `<span class="${v >= 0 ? "up" : "down"}">${v >= 0 ? "+" : ""}${Number(v).toFixed(1)}%</span>`;
+const esc = s => String(s ?? "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+const charts = {};
+async function get(path) { const r = await fetch(path); if (!r.ok) throw new Error(`${path} → ${r.status}`); return r.json(); }
+function draw(id, type, data, opts = {}) {
+  charts[id]?.destroy();
+  charts[id] = new Chart($(id), { type, data, options: { responsive: true, maintainAspectRatio: false, animation: false,
+    interaction: { mode: "index", intersect: false },
+    plugins: { legend: { display: data.datasets.length > 1, position: "bottom", labels: { boxWidth: 10, boxHeight: 10, usePointStyle: true } } },
+    scales: { x: { grid: { display: false } }, y: { title: { display: true, text: "PLN / m²" }, grid: { color: "#eeede9" },
+              ticks: { callback: v => fmt(v) } } }, ...opts } });
+}
+Chart.defaults.font.family = getComputedStyle(document.body).fontFamily; Chart.defaults.color = "#5b5a54";
+Chart.defaults.elements.line.borderWidth = 2; Chart.defaults.elements.point.radius = 2; Chart.defaults.elements.bar.borderRadius = 4;
+
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("nav button, .tab").forEach(e => e.classList.remove("on"));
+  b.classList.add("on"); $(b.dataset.tab).classList.add("on");
+});
+
+async function loadStatic() {
+  const [health, months, cities, rejects] = await Promise.all([get("/health"), get("/months"), get("/cities"), get("/rejects")]);
+  const checks = health.last_runs.filter(r => r.step.startsWith("check:"));
+  $("health").textContent = health.status === "ok" ? "OK" : "DEGRADED"; $("health").className = `pill ${health.status === "ok" ? "ok" : "bad"}`;
+  $("health-sub").textContent = `${checks.filter(r => r.passed).length}/${checks.length} checks passed`;
+  const total = months.reduce((s, m) => s + m.listings, 0);
+  $("months").textContent = months.length;
+  $("months-sub").textContent = months.length ? `${months[0].month_key} → ${months.at(-1).month_key} · ${fmt(total)} listings` : "no data";
+  $("city").innerHTML = `<option value="">All cities</option>` + cities.map(c => `<option value="${c.city_key}">${esc(c.city_name)}</option>`).join("");
+  $("city").value = cities.some(c => c.city_key === "warszawa") ? "warszawa" : "";
+  $("rejects").innerHTML = rejects.map(r => `<tr><td>${esc(r.reject_reason)}</td><td class="n">${fmt(r.count)}</td></tr>`).join("") || "<tr><td colspan=2>none</td></tr>";
+  $("runlog").innerHTML = health.last_runs.map(r => `<tr><td>${esc(r.step)}</td><td>${r.month_key}</td>
+    <td><span class="pill ${r.passed ? "ok" : "bad"}">${r.passed ? "PASS" : "FAIL"}</span></td><td>${esc(r.value)}</td>
+    <td>${new Date(r.ran_at).toLocaleString("sv-SE")}</td></tr>`).join("");
+}
+
+async function loadCity() {
+  const key = $("city").value, q = key ? `?city=${encodeURIComponent(key)}` : "";
+  const [prices, premiums, distance] = await Promise.all([get(`/prices${q}`), get(`/premiums${q}`), get(`/distance${q}`)]);
+  const cities = [...new Set(prices.map(r => r.city_name))];
+  const months = [...new Set(prices.map(r => r.month_key))].sort();
+
+  // KPI: latest median for a single city; for all cities, the latest month's overall median of city medians
+  const last = key ? prices.at(-1) : null;
+  if (last) { $("latest").textContent = `${fmt(last.median_ppm2)} PLN`; $("latest-sub").innerHTML = `${last.month_key} · MoM ${pct(last.mom_change_pct)}`; }
+  else { $("latest").textContent = "–"; $("latest-sub").textContent = "select a city"; }
+
+  draw("c1", "line", { labels: months, datasets: cities.map((c, i) => ({ label: c, borderColor: colour(i), backgroundColor: colour(i),
+    borderDash: dash(i), spanGaps: true,
+    data: months.map(m => prices.find(r => r.city_name === c && r.month_key === m)?.median_ppm2 ?? null) })) });
+
+  if (key) {
+    const p = premiums[0] || {};
+    $("c2-title").textContent = `Feature premiums — ${p.city_name ?? key} (latest observation per flat)`;
+    draw("c2", "bar", { labels: ["Elevator", "Balcony", "Parking"], datasets: [
+      { label: "With", backgroundColor: colour(0), data: [p.ppm2_with_elevator, p.ppm2_with_balcony, p.ppm2_with_parking] },
+      { label: "Without", backgroundColor: "#b9c9de", data: [p.ppm2_without_elevator, p.ppm2_without_balcony, p.ppm2_without_parking] }] });
+  } else {
+    $("c2-title").textContent = "Elevator premium by city (latest observation per flat)";
+    draw("c2", "bar", { labels: premiums.map(p => p.city_name), datasets: [
+      { label: "With elevator", backgroundColor: colour(0), data: premiums.map(p => p.ppm2_with_elevator) },
+      { label: "Without elevator", backgroundColor: "#b9c9de", data: premiums.map(p => p.ppm2_without_elevator) }] });
+  }
+
+  const bands = [...new Set(distance.map(r => r.distance_band))].sort((a, b) => parseFloat(a) - parseFloat(b));
+  const dCities = [...new Set(distance.map(r => r.city_name))];
+  draw("c3", "bar", { labels: bands, datasets: dCities.map((c, i) => ({ label: c, backgroundColor: colour(i),
+    data: bands.map(b => distance.find(r => r.city_name === c && r.distance_band === b)?.median_ppm2 ?? null) })) });
+
+  $("prices").innerHTML = [...prices].sort((a, b) => b.month_key.localeCompare(a.month_key) || a.city_name.localeCompare(b.city_name))
+    .map(r => `<tr><td>${esc(r.city_name)}</td><td>${r.month_key}</td><td class="n">${fmt(r.listings)}</td>
+      <td class="n">${fmt(r.median_ppm2)}</td><td class="n">${pct(r.mom_change_pct)}</td></tr>`).join("");
+}
+
+// Flow diagram boxes, generated so the SVG above stays short.
+(() => {
+  const boxes = [["Source", "monthly CSV"], ["Raw", "month=YYYY-MM/|untouched"], ["Silver", "typed Parquet|+ rejects with reason"],
+    ["Gold · Postgres", "fact_listing, dims"], ["Checks", "6 rules → run_log|fail ⇒ quarantine"], ["FastAPI", "/prices /premiums|/distance"]];
+  const arrows = ["extract.py", "transform.py", "load.py", "checks.py", ""];
+  const w = 160, gap = 70, y = 56, h = 78;
+  let s = "";
+  boxes.forEach(([t, d], i) => {
+    const x = 20 + i * (w + gap);
+    s += `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="8" fill="#fff" stroke="${i === 3 ? "#2a78d6" : "#c9c8c2"}" stroke-width="1.5"/>
+      <text x="${x + w / 2}" y="${y + 26}" text-anchor="middle" font-weight="600">${t}</text>
+      ${d.split("|").map((l, j) => `<text x="${x + w / 2}" y="${y + 46 + j * 14}" text-anchor="middle" font-size="11" fill="#5b5a54">${l}</text>`).join("")}`;
+    if (i < 5) s += `<line x1="${x + w + 2}" y1="${y + h / 2}" x2="${x + w + gap - 2}" y2="${y + h / 2}" stroke="#5b5a54" stroke-width="1.5" marker-end="url(#arr)"/>
+      <text x="${x + w + gap / 2}" y="${y + h / 2 - 8}" text-anchor="middle" font-size="11" fill="#2a78d6">${arrows[i]}</text>`;
+  });
+  $("boxes").innerHTML = s;
+})();
+
+$("city").onchange = () => loadCity().catch(e => $("err").textContent = e.message);
+loadStatic().then(loadCity).catch(e => { $("err").textContent = e.message; console.error(e); });
+</script>
+</body>
+</html>

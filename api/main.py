@@ -8,14 +8,20 @@ and the API is a thin, typed wrapper.
     GET /prices?city=warszawa
     GET /premiums?city=warszawa
     GET /distance?city=warszawa
+    GET /cities            city_key -> city_name
+    GET /rejects           reject counts by reason
+    GET /                  the dashboard (api/static/index.html)
 """
 import psycopg
 from fastapi import FastAPI, HTTPException, Query
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from psycopg.rows import dict_row
 
 from pipeline import config
 
 QUESTIONS = config.PROJECT_ROOT / "sql" / "questions"
+STATIC = config.PROJECT_ROOT / "api" / "static"
 SQL = {
     "prices": (QUESTIONS / "01_price_per_m2_by_city_month.sql").read_text(encoding="utf-8"),
     "premiums": (QUESTIONS / "02_feature_premiums.sql").read_text(encoding="utf-8"),
@@ -27,6 +33,7 @@ app = FastAPI(
     version="0.1.0",
     description="Monthly listing prices per m² by city, served from a Postgres star schema.",
 )
+app.mount("/static", StaticFiles(directory=STATIC), name="static")
 
 
 def query(sql: str, params: dict | None = None) -> list[dict]:
@@ -75,3 +82,18 @@ def premiums(city: str | None = Query(None)):
 @app.get("/distance")
 def distance(city: str | None = Query(None)):
     return query(SQL["distance"], {"city": validate_city(city)})
+
+
+@app.get("/cities")
+def cities():
+    return query("SELECT city_key, city_name FROM dw.dim_city ORDER BY city_name")
+
+
+@app.get("/rejects")
+def rejects():
+    return query("SELECT reject_reason, count(*) AS count FROM dw.rejects GROUP BY reject_reason ORDER BY count DESC")
+
+
+@app.get("/", include_in_schema=False)
+def index():
+    return HTMLResponse((STATIC / "index.html").read_text(encoding="utf-8"))
